@@ -1,7 +1,7 @@
 ## **Expense Tracker**
 
 ### _Must Have_
-* User is able to Login and SignUp
+* User is able to Log In and SignUp
 * User is able to add/ remove the expense manually
 * User is able to see his expenses, Categorised expenses
 * User is able to weekly, monthly, yearly report and statistics about the spending
@@ -16,7 +16,7 @@
 * User is able to track their financial behaviour
 * AI can suggest 
 * App should be able ti add expense on its own by reading and parsing sms
-* Notification indicating various things like ris, overspending etc (WhatsApp , SMS)
+* Notification indicating various things like ris, overspending etc. (WhatsApp , SMS)
 
 
 ### Auth HLD
@@ -94,7 +94,7 @@ sequenceDiagram
         UserDetailsServiceIMPL->>-JWTFilter:set Security Context
         JWTFilter->>-Client:isAuthenticated or Not
     end
-
+    
 ```
 
 ## ER Diagram
@@ -102,12 +102,12 @@ sequenceDiagram
 ```mermaid
 erDiagram
     USERS{
-        varchar(255) user_id pk, fk
+        varchar(255) user_id pk,fk
         varchar(30) user_name  
         varchar(255) password 
     }
     TOKENS{
-        int token_id pk
+        int token_id
         varchar(255) refresh_token
         datetime expiray_date
     }
@@ -124,7 +124,6 @@ erDiagram
     
     USERS ||--o{ USER_ROLES : "has"
     ROLES ||--o{ USER_ROLES : "assigned to"
-
 
 ```
 
