@@ -111,10 +111,10 @@ erDiagram
         varchar(255) refresh_token
         datetime expiray_date
     }
-    ROLES{
-        int role_id pk
-        varchar(30) role_name
-    }
+%%    ROLES{
+%%        int role_id pk
+%%        varchar(30) role_name
+%%    }
     USER_ROLES{
         int role_id FK
         varchar(255) user_id FK
