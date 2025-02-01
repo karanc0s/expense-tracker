@@ -1,15 +1,20 @@
 package com.karan.authservice.service;
 
+import com.karan.authservice.Dto.UserInfoDTO;
 import com.karan.authservice.entities.UserInfo;
 import com.karan.authservice.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -17,6 +22,8 @@ public class UserDetailsIMPL implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private static final Logger log = LoggerFactory.getLogger(UserDetailsIMPL.class);
 
     /**
      * Locates the user based on the username. In the actual implementation, the search
@@ -32,6 +39,7 @@ public class UserDetailsIMPL implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
         Optional<UserInfo> user = userRepository.findByUsername(username);
         if(user.isEmpty()){
             throw new UsernameNotFoundException("Cloud not found the user"+username);
@@ -40,7 +48,27 @@ public class UserDetailsIMPL implements UserDetailsService {
     }
 
 
-    public UserInfo checkIfUserExists(String username) {
-        return null;
+    public Optional<UserInfo> checkIfUserExists(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    public Boolean signUpUser(UserInfoDTO userInfoDTO){
+
+        userInfoDTO.setPassword(passwordEncoder.encode(userInfoDTO.getPassword()));
+        if(checkIfUserExists(userInfoDTO.getUsername()).isPresent()){
+            return false;
+        }
+
+        String userId = UUID.randomUUID().toString();
+        UserInfo info = new UserInfo(
+                userId,
+                userInfoDTO.getUsername(),
+                userInfoDTO.getPassword(),
+                new HashSet<>()
+        );
+        userRepository.save(info);
+
+        // TODO ::: pushEventToQueue
+        return true;
     }
 }
