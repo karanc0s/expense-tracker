@@ -3,9 +3,9 @@ package com.karan.authservice.service;
 import com.karan.authservice.Dto.UserInfoDTO;
 import com.karan.authservice.entities.UserInfo;
 import com.karan.authservice.repository.UserRepository;
-import lombok.AllArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,13 +17,21 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
 public class UserDetailsIMPL implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     private static final Logger log = LoggerFactory.getLogger(UserDetailsIMPL.class);
+
+    @Autowired
+    public UserDetailsIMPL(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder
+    ) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     /**
      * Locates the user based on the username. In the actual implementation, the search

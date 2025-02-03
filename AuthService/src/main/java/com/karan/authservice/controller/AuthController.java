@@ -6,7 +6,7 @@ import com.karan.authservice.entities.RefreshToken;
 import com.karan.authservice.service.JwtService;
 import com.karan.authservice.service.RefreshTokenService;
 import com.karan.authservice.service.UserDetailsIMPL;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,12 +16,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("auth/v1")
-@AllArgsConstructor
 public class AuthController {
 
-    private JwtService jwtService;
-    private RefreshTokenService refreshTokenService;
-    private UserDetailsIMPL userDetailsIMPL;
+    private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
+    private final UserDetailsIMPL userDetailsIMPL;
+
+    @Autowired
+    public AuthController(
+            JwtService jwtService,
+            RefreshTokenService refreshTokenService ,
+            UserDetailsIMPL userDetailsIMPL
+    ) {
+        this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
+        this.userDetailsIMPL = userDetailsIMPL;
+    }
 
     @PostMapping("/signup")
     public ResponseEntity signUp(@RequestBody UserInfoDTO userInfoDTO){

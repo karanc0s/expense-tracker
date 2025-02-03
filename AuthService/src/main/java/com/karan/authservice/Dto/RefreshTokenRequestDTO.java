@@ -1,16 +1,36 @@
 package com.karan.authservice.Dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+
 public class RefreshTokenRequestDTO {
 
     private String token;
 
+    public RefreshTokenRequestDTO() {}
+    public RefreshTokenRequestDTO(
+            String token
+    ) {
+        this.token = token;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public static class Builder{
+        private String token;
+
+        public Builder token(String token){
+            this.token = token;
+            return this;
+        }
+
+        public RefreshTokenRequestDTO build(){
+            return new RefreshTokenRequestDTO(token);
+        }
+    }
 }

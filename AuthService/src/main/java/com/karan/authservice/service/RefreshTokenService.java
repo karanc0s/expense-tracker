@@ -4,7 +4,6 @@ import com.karan.authservice.entities.RefreshToken;
 import com.karan.authservice.entities.UserInfo;
 import com.karan.authservice.repository.RefreshTokenRepository;
 import com.karan.authservice.repository.UserRepository;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -12,12 +11,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
+
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
 
+    public RefreshTokenService(
+            RefreshTokenRepository refreshTokenRepository,
+            UserRepository userRepository
+    ) {
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.userRepository = userRepository;
+    }
 
     public RefreshToken createRefreshToken(String username) {
         Optional<UserInfo> optUser = userRepository.findByUsername(username);
@@ -30,6 +36,8 @@ public class RefreshTokenService {
                 .token(UUID.randomUUID().toString())
                 .expiryDate(Instant.now().plusMillis(600000))
                 .build();
+
+
         return refreshTokenRepository.save(refreshToken);
     }
 

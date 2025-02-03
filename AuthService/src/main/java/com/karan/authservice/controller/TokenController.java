@@ -6,7 +6,6 @@ import com.karan.authservice.Dto.RefreshTokenRequestDTO;
 import com.karan.authservice.entities.RefreshToken;
 import com.karan.authservice.service.JwtService;
 import com.karan.authservice.service.RefreshTokenService;
-import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,13 +18,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("auth/v1")
-@AllArgsConstructor
 public class TokenController {
 
 
-    private AuthenticationManager authenticationManager;
-    private RefreshTokenService refreshTokenService;
-    private JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtService jwtService;
+
+    public TokenController(
+            AuthenticationManager authenticationManager,
+            RefreshTokenService refreshTokenService,
+            JwtService jwtService
+    ) {
+        this.authenticationManager = authenticationManager;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtService = jwtService;
+    }
 
     @PostMapping("/login")
     public ResponseEntity authenticateAndGetToken(@RequestBody AuthRequestDTO requestDTO){
@@ -35,6 +43,7 @@ public class TokenController {
                         requestDTO.getPassword()
                 )
         );
+        
         if(authentication.isAuthenticated()){
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(requestDTO.getUsername());
             return ResponseEntity.ok(JwtResponseDTO.builder()
@@ -61,4 +70,6 @@ public class TokenController {
                         () -> new RuntimeException("Refresh token not found")
                 );
     }
+
+
 }
