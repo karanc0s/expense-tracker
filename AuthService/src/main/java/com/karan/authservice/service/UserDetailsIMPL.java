@@ -2,6 +2,7 @@ package com.karan.authservice.service;
 
 import com.karan.authservice.Dto.UserInfoDTO;
 import com.karan.authservice.entities.UserInfo;
+import com.karan.authservice.exception.UserNotFoundException;
 import com.karan.authservice.repository.UserRepository;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public class UserDetailsIMPL implements UserDetailsService {
 
         Optional<UserInfo> user = userRepository.findByUsername(username);
         if(user.isEmpty()){
-            throw new UsernameNotFoundException("Cloud not found the user"+username);
+            throw new UserNotFoundException("Cloud not found the user"+username);
         }
         return new FullUserDetails(user.get());
     }

@@ -2,6 +2,7 @@ package com.karan.authservice.service;
 
 import com.karan.authservice.entities.RefreshToken;
 import com.karan.authservice.entities.UserInfo;
+import com.karan.authservice.exception.ExpiredTokenException;
 import com.karan.authservice.repository.RefreshTokenRepository;
 import com.karan.authservice.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,7 @@ public class RefreshTokenService {
         // if token is expired then, this will give -ve value
         if(refreshToken.getExpiryDate().compareTo(Instant.now()) < 0){
             refreshTokenRepository.delete(refreshToken);
-            throw new RuntimeException("Expired refresh token. Please Login Again");
+            throw new ExpiredTokenException("Expired refresh token. Please Login Again");
         }
         return refreshToken;
     }

@@ -36,7 +36,7 @@ public class TokenController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity authenticateAndGetToken(@RequestBody AuthRequestDTO requestDTO){
+    public ResponseEntity<JwtResponseDTO> authenticateAndGetToken(@RequestBody AuthRequestDTO requestDTO){
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         requestDTO.getUsername(),
@@ -51,7 +51,7 @@ public class TokenController {
                             .token(refreshToken.getToken())
                     .build());
         }else{
-            return new ResponseEntity<>("Exception in User Service", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw  new RuntimeException("Exception in User Service");
         }
     }
 
@@ -70,6 +70,5 @@ public class TokenController {
                         () -> new RuntimeException("Refresh token not found")
                 );
     }
-
 
 }

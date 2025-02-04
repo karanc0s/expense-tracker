@@ -3,6 +3,7 @@ package com.karan.authservice.controller;
 import com.karan.authservice.Dto.JwtResponseDTO;
 import com.karan.authservice.Dto.UserInfoDTO;
 import com.karan.authservice.entities.RefreshToken;
+import com.karan.authservice.exception.UserAlreadyExistsException;
 import com.karan.authservice.service.JwtService;
 import com.karan.authservice.service.RefreshTokenService;
 import com.karan.authservice.service.UserDetailsIMPL;
@@ -34,18 +35,18 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity signUp(@RequestBody UserInfoDTO userInfoDTO){
+    public ResponseEntity<JwtResponseDTO> signUp(@RequestBody UserInfoDTO userInfoDTO){
         try{
             Boolean isSignUped = userDetailsIMPL.signUpUser(userInfoDTO);
             if(Boolean.FALSE.equals(isSignUped)){
-                return new ResponseEntity<>("Already Exist", HttpStatus.BAD_REQUEST);
+                throw new UserAlreadyExistsException("Already Exist");
             }
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(userInfoDTO.getUsername());
             String jwtToken = jwtService.generateToken(userInfoDTO.getUsername());
             return new ResponseEntity<>(JwtResponseDTO.builder().accessToken(jwtToken).
                     token(refreshToken.getToken()).build(), HttpStatus.OK);
         }catch (Exception e){
-            return new ResponseEntity<>("Exception in User Service", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new RuntimeException("Exception in User Service");
         }
     }
 }
