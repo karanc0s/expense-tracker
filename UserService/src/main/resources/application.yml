@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: UserService
+
+  kafka:
+    bootstrap-servers: 10.211.55.3:9092
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: com.karan.userservice.deserializer.UserInfoDeserializer
+      group-id: event-test-group
+
+
+server:
+  port: 8081
+
+
