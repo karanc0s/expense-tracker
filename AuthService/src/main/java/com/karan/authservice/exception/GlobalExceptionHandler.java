@@ -15,16 +15,7 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleGlobalException(Exception ex, WebRequest request) {
-        ErrorResponseDTO errorResponse =  ErrorResponseDTO.builder()
-                .apiPath(request.getDescription(false))
-                .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-                .errorMessage(ex.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+
 
     @ExceptionHandler(ExpiredTokenException.class)
     public ResponseEntity<ErrorResponseDTO> handleTokenExpiredException(Exception ex, WebRequest request) {
@@ -58,6 +49,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+
+    //    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ErrorResponseDTO> handleGlobalException(Exception ex, WebRequest request) {
+//        ErrorResponseDTO errorResponse =  ErrorResponseDTO.builder()
+//                .apiPath(request.getDescription(false))
+//                .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+//                .errorMessage(ex.getMessage())
+//                .timestamp(LocalDateTime.now())
+//                .build();
+//        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 
 
 

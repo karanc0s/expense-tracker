@@ -9,6 +9,7 @@ import com.karan.authservice.service.JwtService;
 import com.karan.authservice.service.RefreshTokenService;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,18 +27,16 @@ public class TokenController {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
-    private final Producer<String , UserInfo> kafkaProducer;
 
+    @Autowired
     public TokenController(
             AuthenticationManager authenticationManager,
             RefreshTokenService refreshTokenService,
-            JwtService jwtService,
-            Producer<String , UserInfo> kafkaProducer
+            JwtService jwtService
     ) {
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
         this.jwtService = jwtService;
-        this.kafkaProducer = kafkaProducer;
     }
 
     @PostMapping("/login")
@@ -51,47 +50,32 @@ public class TokenController {
         
         if(authentication.isAuthenticated()){
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(requestDTO.getUsername());
-            return ResponseEntity.ok(JwtResponseDTO.builder()
+            return ResponseEntity.ok(
+                    JwtResponseDTO.builder()
                             .accessToken(jwtService.generateToken(requestDTO.getUsername()))
-                            .token(refreshToken.getToken())
-                    .build());
+                            .refreshToken(refreshToken.getToken())
+                    .build()
+            );
         }else{
             throw  new RuntimeException("Exception in User Service");
         }
     }
 
-    @PostMapping("/refreshToken")
+    @PostMapping("/refresh")
     public JwtResponseDTO refreshToken(@RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO){
         return refreshTokenService.findByToken(refreshTokenRequestDTO.getToken())
-                .map(refreshToken -> refreshTokenService.verifyExpiryDate(refreshToken))
+                .map(refreshTokenService::verifyExpiryDate)
                 .map(RefreshToken::getUserInfo)
                 .map(userInfo -> {
                     String accessToken = jwtService.generateToken(userInfo.getUsername());
                     return JwtResponseDTO.builder()
                             .accessToken(accessToken)
-                            .token(refreshTokenRequestDTO.getToken())
+                            .refreshToken(refreshTokenRequestDTO.getToken())
                             .build();
                 }).orElseThrow(
                         () -> new RuntimeException("Refresh token not found")
                 );
     }
 
-    @GetMapping("/send")
-    public void sendEvent(){
-        UserInfo newUser = new UserInfo(
-                "sdfsdf434j3k4j34",
-                "KarandeepSingh",
-                "35342323fdf#23",
-                new HashSet<>()
-        );
-        ProducerRecord<String , UserInfo> record = new ProducerRecord<>("T11TEST","User_Event" ,newUser);
-        kafkaProducer.send(record , (metadata , exception)->{
-            if (exception != null) {
-                System.err.println("Error sending message to Kafka: " + exception.getMessage());
-            } else {
-                System.out.println("Message sent to Kafka, offset: " + metadata.offset());
-            }
-        });
-    }
 
 }

@@ -4,16 +4,16 @@ package com.karan.authservice.Dto;
 public class JwtResponseDTO {
 
     private String accessToken;
-    private String token;
+    private String refreshToken;
 
     // No-args Constructor
     public JwtResponseDTO() {
     }
 
     // All-args Constructor
-    public JwtResponseDTO(String accessToken, String token) {
+    public JwtResponseDTO(String accessToken, String refreshToken) {
         this.accessToken = accessToken;
-        this.token = token;
+        this.refreshToken = refreshToken;
     }
 
     // Getters and Setters
@@ -26,11 +26,11 @@ public class JwtResponseDTO {
     }
 
     public String getToken() {
-        return token;
+        return refreshToken;
     }
 
     public void setToken(String token) {
-        this.token = token;
+        this.refreshToken = token;
     }
 
     public static Builder builder(){
@@ -47,7 +47,7 @@ public class JwtResponseDTO {
             return this;
         }
 
-        public Builder token(String token) {
+        public Builder refreshToken(String token) {
             this.token = token;
             return this;
         }
@@ -62,7 +62,7 @@ public class JwtResponseDTO {
     public String toString() {
         return "JwtResponseDTO{" +
                 "accessToken='" + accessToken + '\'' +
-                ", token='" + token + '\'' +
+                ", token='" + refreshToken + '\'' +
                 '}';
     }
 

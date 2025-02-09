@@ -1,7 +1,7 @@
-package com.karan.authservice.service;
+package com.karan.authservice.Dto;
 
 import com.karan.authservice.entities.UserInfo;
-import com.karan.authservice.entities.UserRole;
+import com.karan.authservice.entities.UserRoles;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,7 +22,7 @@ public class FullUserDetails extends UserInfo implements UserDetails {
         this.password = info.getPassword();
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        for(UserRole role : info.getRoles()) {
+        for(UserRoles role : info.getRoles()) {
             authorities.add(new SimpleGrantedAuthority(role.getRoleName().toUpperCase()));
         }
         this.authorities = authorities;

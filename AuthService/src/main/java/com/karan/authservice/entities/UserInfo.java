@@ -19,17 +19,17 @@ public class UserInfo extends BaseEntity{
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "user_role",
+            name = "user_role_map",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<UserRole> roles = new HashSet<>();
+    private Set<UserRoles> roles = new HashSet<>();
 
     public UserInfo(
             String userId,
             String username,
             String password,
-            Set<UserRole> roles
+            Set<UserRoles> roles
     ) {
         this.userId = userId;
         this.username = username;
@@ -74,11 +74,11 @@ public class UserInfo extends BaseEntity{
         this.password = password;
     }
 
-    public Set<UserRole> getRoles() {
+    public Set<UserRoles> getRoles() {
         return roles;
     }
 
-    public void setRoles(Set<UserRole> roles) {
+    public void setRoles(Set<UserRoles> roles) {
         this.roles = roles;
     }
 }

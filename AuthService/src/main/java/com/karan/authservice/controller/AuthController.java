@@ -3,7 +3,8 @@ package com.karan.authservice.controller;
 import com.karan.authservice.Dto.JwtResponseDTO;
 import com.karan.authservice.Dto.UserInfoDTO;
 import com.karan.authservice.entities.RefreshToken;
-import com.karan.authservice.exception.UserAlreadyExistsException;
+
+import com.karan.authservice.service.AuthService;
 import com.karan.authservice.service.JwtService;
 import com.karan.authservice.service.RefreshTokenService;
 import com.karan.authservice.service.UserDetailsIMPL;
@@ -19,34 +20,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("auth/v1")
 public class AuthController {
 
-    private final JwtService jwtService;
-    private final RefreshTokenService refreshTokenService;
-    private final UserDetailsIMPL userDetailsIMPL;
+    private final AuthService authService;
 
     @Autowired
     public AuthController(
-            JwtService jwtService,
-            RefreshTokenService refreshTokenService ,
-            UserDetailsIMPL userDetailsIMPL
+            AuthService authService
     ) {
-        this.jwtService = jwtService;
-        this.refreshTokenService = refreshTokenService;
-        this.userDetailsIMPL = userDetailsIMPL;
+
+        this.authService = authService;
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<JwtResponseDTO> signUp(@RequestBody UserInfoDTO userInfoDTO){
-        try{
-            Boolean isSignUped = userDetailsIMPL.signUpUser(userInfoDTO);
-            if(Boolean.FALSE.equals(isSignUped)){
-                throw new UserAlreadyExistsException("Already Exist");
-            }
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userInfoDTO.getUsername());
-            String jwtToken = jwtService.generateToken(userInfoDTO.getUsername());
-            return new ResponseEntity<>(JwtResponseDTO.builder().accessToken(jwtToken).
-                    token(refreshToken.getToken()).build(), HttpStatus.OK);
-        }catch (Exception e){
-            throw new RuntimeException("Exception in User Service");
-        }
+    public ResponseEntity<JwtResponseDTO> signUp(@RequestBody UserInfoDTO userInfoDTO) {
+        JwtResponseDTO responseDTO =  authService.signUp(userInfoDTO);
+        return new ResponseEntity<>(
+                responseDTO,
+                HttpStatus.CREATED
+        );
     }
 }

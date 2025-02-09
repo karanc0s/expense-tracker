@@ -1,9 +1,13 @@
 package com.karan.authservice.service;
 
+import com.karan.authservice.Dto.FullUserDetails;
 import com.karan.authservice.Dto.UserInfoDTO;
 import com.karan.authservice.entities.UserInfo;
+import com.karan.authservice.exception.UserAlreadyExistsException;
 import com.karan.authservice.exception.UserNotFoundException;
 import com.karan.authservice.repository.UserRepository;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,17 +25,14 @@ import java.util.UUID;
 public class UserDetailsIMPL implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     private static final Logger log = LoggerFactory.getLogger(UserDetailsIMPL.class);
 
     @Autowired
     public UserDetailsIMPL(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder
+            UserRepository userRepository
     ) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -56,28 +57,4 @@ public class UserDetailsIMPL implements UserDetailsService {
         return new FullUserDetails(user.get());
     }
 
-
-    public Optional<UserInfo> checkIfUserExists(String username) {
-        return userRepository.findByUsername(username);
-    }
-
-    public Boolean signUpUser(UserInfoDTO userInfoDTO){
-
-        userInfoDTO.setPassword(passwordEncoder.encode(userInfoDTO.getPassword()));
-        if(checkIfUserExists(userInfoDTO.getUsername()).isPresent()){
-            return false;
-        }
-
-        String userId = UUID.randomUUID().toString();
-        UserInfo info = new UserInfo(
-                userId,
-                userInfoDTO.getUsername(),
-                userInfoDTO.getPassword(),
-                new HashSet<>()
-        );
-        userRepository.save(info);
-
-        // TODO ::: pushEventToQueue
-        return true;
-    }
 }

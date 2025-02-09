@@ -46,12 +46,26 @@ public class JwtService {
         return createToken(username , claims);
     }
 
+    public String generateToken(String username , Long duration) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(username , claims , duration);
+    }
+
     private String createToken(String username, Map<String, Object> claims) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 5))
+                .signWith(getSignKey() , SignatureAlgorithm.HS256)
+                .compact();
+    }
+    private String createToken(String username, Map<String, Object> claims , Long duration) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + duration))
                 .signWith(getSignKey() , SignatureAlgorithm.HS256)
                 .compact();
     }

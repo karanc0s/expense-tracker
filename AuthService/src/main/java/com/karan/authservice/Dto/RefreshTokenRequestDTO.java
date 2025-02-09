@@ -4,21 +4,21 @@ package com.karan.authservice.Dto;
 
 public class RefreshTokenRequestDTO {
 
-    private String token;
+    private String refreshToken;
 
     public RefreshTokenRequestDTO() {}
     public RefreshTokenRequestDTO(
-            String token
+            String refreshToken
     ) {
-        this.token = token;
+        this.refreshToken = refreshToken;
     }
 
     public String getToken() {
-        return token;
+        return refreshToken;
     }
 
     public void setToken(String token) {
-        this.token = token;
+        this.refreshToken = token;
     }
 
     public static class Builder{

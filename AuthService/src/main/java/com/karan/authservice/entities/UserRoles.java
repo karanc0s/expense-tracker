@@ -3,8 +3,8 @@ import jakarta.persistence.*;
 
 
 @Entity
-@Table(name = "user_role")
-public class UserRole extends BaseEntity {
+@Table(name = "user_roles")
+public class UserRoles extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -14,10 +14,10 @@ public class UserRole extends BaseEntity {
     @Column(name = "role_name" , nullable = false)
     private String roleName;
 
-    public UserRole() {
+    public UserRoles() {
     }
 
-    public UserRole(Long roleId, String roleName) {
+    public UserRoles(Long roleId, String roleName) {
         this.roleId = roleId;
         this.roleName = roleName;
     }

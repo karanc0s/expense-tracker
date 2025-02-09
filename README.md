@@ -50,6 +50,7 @@ sequenceDiagram
 
     rect rgb(0, 0, 0)
         note right of Client: SignUp FLow
+        
         Client->>+AuthController:api/v1/signup
         AuthController->>+UserDetailsServiceIMPL:sign up the user
         UserDetailsServiceIMPL-->>EventPublisher:Publish event to the queue
