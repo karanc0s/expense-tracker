@@ -50,13 +50,11 @@ sequenceDiagram
 
     rect rgb(0, 0, 0)
         note right of Client: SignUp FLow
-        
-        Client->>+AuthController:api/v1/signup
-        AuthController->>+UserDetailsServiceIMPL:sign up the user
-        UserDetailsServiceIMPL-->>EventPublisher:Publish event to the queue
-        UserDetailsServiceIMPL->>AuthController:success or throw an error
-        AuthController->>-Client:Response with status code
-        UserDetailsServiceIMPL->>-DB:save user to DB
+        Client->>+AuthController: SignUp(userInfoDTO)
+        AuthController->>+AuthService: singUp(userInfoDTO)
+        AuthService->>UserRepo:Create user, refToken , save both
+        AuthService->>-AuthController:return access,refToken
+        AuthController ->>- Client: accessToken, RefToken
     end
 
 

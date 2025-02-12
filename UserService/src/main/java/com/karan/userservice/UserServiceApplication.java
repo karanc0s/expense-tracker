@@ -9,7 +9,6 @@ import java.util.Set;
 
 @SpringBootApplication
 @EnableJpaAuditing(auditorAwareRef = "AuditingIMPL")
-
 public class UserServiceApplication {
 
     public static void main(String[] args) {

@@ -27,9 +27,9 @@ import java.util.UUID;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenService tokenService;
     private final PasswordEncoder passwordEncoder;
-    private final Producer<String, UserInfo> producer;
+    private final Producer<String, UserInfoDTO> producer;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
@@ -37,14 +37,14 @@ public class AuthService {
     @Autowired
     public AuthService(
             UserRepository userRepository,
-            RefreshTokenRepository refreshTokenRepository,
+            RefreshTokenService tokenService,
             PasswordEncoder passwordEncoder,
-            Producer<String, UserInfo> producer,
+            Producer<String, UserInfoDTO> producer,
             AuthenticationManager authenticationManager,
             JwtService jwtService
     ) {
         this.userRepository = userRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
+        this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
         this.producer = producer;
         this.authenticationManager = authenticationManager;
@@ -63,45 +63,48 @@ public class AuthService {
             throw new UserNotFoundException("Invalid username or password");
         }
 
-        String refreshToken = jwtService.generateToken(requestDTO.getUsername() , 86400000L);
-        String accessToken = jwtService.generateToken(requestDTO.getUsername());
+        String refreshToken = jwtService.generateRefreshToken(requestDTO.getUsername());
+        String accessToken = jwtService.generateAccessToken(requestDTO.getUsername());
         Optional<UserInfo> optionalUserInfo = userRepository.findByUsername(requestDTO.getUsername());
 
         if(optionalUserInfo.isEmpty()){
             throw new UserNotFoundException("Unexpected Error");
         }
-
-        RefreshToken refresh = RefreshToken.builder()
-                .token(refreshToken)
-                .userInfo(optionalUserInfo.get())
-                .expiryDate(Instant.now().plusMillis(86400000L))
-                .build();
-
-        refreshTokenRepository.save(refresh);
-
+        tokenService.saveToken(optionalUserInfo.get() , refreshToken);
         return new JwtResponseDTO.Builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
     }
 
-    public JwtResponseDTO signUp(UserInfoDTO userInfoDTO){
-        userInfoDTO.setPassword(passwordEncoder.encode(userInfoDTO.getPassword()));
-        if(fetchUser(userInfoDTO.getUsername()).isPresent()){
+    public JwtResponseDTO signUp(UserInfoDTO infoDTO){
+        infoDTO.setPassword(passwordEncoder.encode(infoDTO.getPassword()));
+        if(fetchUser(infoDTO.getUsername()).isPresent()){
             throw new UserAlreadyExistsException("User Already Exist");
         }
         String userId = UUID.randomUUID().toString();
         UserInfo info = new UserInfo(
                 userId,
-                userInfoDTO.getUsername(),
-                userInfoDTO.getPassword(),
+                infoDTO.getUsername(),
+                infoDTO.getPassword(),
                 new HashSet<>()
         );
-        userRepository.save(info);
-        RefreshToken refreshToken = createRefreshToken(info);
-        String accessToken = jwtService.generateToken(info.getUsername());
+        info = userRepository.save(info);
+        String refToken = jwtService.generateRefreshToken(info.getUsername());
+        RefreshToken refreshToken = tokenService.saveToken(info , refToken);
+        String accessToken = jwtService.generateAccessToken(info.getUsername());
 
-        sendEvent(userInfoDTO);
+
+        UserInfoDTO eventDTO = UserInfoDTO.builder()
+                .userId(info.getUserId())
+                .username(info.getUsername())
+                .firstname(infoDTO.getFirstname())
+                .lastname(infoDTO.getLastname())
+                .phoneNumber(infoDTO.getPhoneNumber())
+                .email(infoDTO.getEmail())
+                .build();
+
+        sendEvent(eventDTO);
 
         return new JwtResponseDTO.Builder()
                 .accessToken(accessToken)
@@ -113,15 +116,11 @@ public class AuthService {
         return userRepository.findByUsername(username);
     }
 
-
+    // sending event
     private void sendEvent(UserInfoDTO userInfoDTO){
-        UserInfo newUser = new UserInfo(
-                "sdfsdf434j3k4j34",
-                "KarandeepSingh",
-                "35342323fdf#23",
-                new HashSet<>()
-        );
-        ProducerRecord<String , UserInfo> record = new ProducerRecord<>("T11TEST","User_Event" ,newUser);
+
+
+        ProducerRecord<String , UserInfoDTO> record = new ProducerRecord<>("T11TEST","USER_EVENT_CREATED" ,userInfoDTO);
         producer.send(record , (metadata , exception)->{
             if (exception != null) {
                 System.err.println("Error sending message to Kafka: " + exception.getMessage());
@@ -129,16 +128,6 @@ public class AuthService {
                 System.out.println("Message sent to Kafka, offset: " + metadata.offset());
             }
         });
-    }
-
-    private RefreshToken createRefreshToken(UserInfo userInfo){
-        String refreshToken = UUID.randomUUID().toString();
-        System.out.println(refreshToken);
-        return RefreshToken.builder()
-                .token(refreshToken)
-                .userInfo(userInfo)
-                .expiryDate(Instant.now().plusMillis(86400000L))
-                .build();
     }
 
 }

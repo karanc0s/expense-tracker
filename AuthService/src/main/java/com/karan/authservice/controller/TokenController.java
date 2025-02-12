@@ -23,59 +23,19 @@ import java.util.HashSet;
 @RequestMapping("auth/v1")
 public class TokenController {
 
-
-    private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
-    private final JwtService jwtService;
 
     @Autowired
     public TokenController(
-            AuthenticationManager authenticationManager,
-            RefreshTokenService refreshTokenService,
-            JwtService jwtService
+            RefreshTokenService refreshTokenService
     ) {
-        this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
-        this.jwtService = jwtService;
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<JwtResponseDTO> authenticateAndGetToken(@RequestBody AuthRequestDTO requestDTO){
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        requestDTO.getUsername(),
-                        requestDTO.getPassword()
-                )
-        );
-        
-        if(authentication.isAuthenticated()){
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(requestDTO.getUsername());
-            return ResponseEntity.ok(
-                    JwtResponseDTO.builder()
-                            .accessToken(jwtService.generateToken(requestDTO.getUsername()))
-                            .refreshToken(refreshToken.getToken())
-                    .build()
-            );
-        }else{
-            throw  new RuntimeException("Exception in User Service");
-        }
     }
 
     @PostMapping("/refresh")
-    public JwtResponseDTO refreshToken(@RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO){
-        return refreshTokenService.findByToken(refreshTokenRequestDTO.getToken())
-                .map(refreshTokenService::verifyExpiryDate)
-                .map(RefreshToken::getUserInfo)
-                .map(userInfo -> {
-                    String accessToken = jwtService.generateToken(userInfo.getUsername());
-                    return JwtResponseDTO.builder()
-                            .accessToken(accessToken)
-                            .refreshToken(refreshTokenRequestDTO.getToken())
-                            .build();
-                }).orElseThrow(
-                        () -> new RuntimeException("Refresh token not found")
-                );
+    public ResponseEntity<JwtResponseDTO> refreshAccessToken(@RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO){
+        JwtResponseDTO responseDTO = refreshTokenService.refreshToken(refreshTokenRequestDTO.getToken());
+        return ResponseEntity.ok(responseDTO);
     }
-
 
 }

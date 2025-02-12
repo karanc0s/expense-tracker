@@ -1,23 +1,50 @@
 package com.karan.userservice.controller;
 
+import com.karan.userservice.Dto.UserInfoDTO;
+import com.karan.userservice.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user/v1")
 public class UserController {
 
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
     @GetMapping("/getUser")
-    public void getUser(){}
+    public ResponseEntity<UserInfoDTO> getUser(
+            @RequestBody UserInfoDTO user
+    ){
+        UserInfoDTO userInfoDTO = userService.getUser(user);
+        return ResponseEntity.ok(userInfoDTO);
+    }
 
+    @PostMapping("/update")
+    public void createUpdate(){
 
-    @PostMapping("/create")
-    public void createUpdate(){}
+    }
 
     @GetMapping("/health")
     public ResponseEntity<Boolean> checkHealth(){
         return new ResponseEntity<>(true, HttpStatus.OK);
+    }
+
+
+    @KafkaListener(
+            topics = "${spring.kafka.topic-json.name}" ,
+            groupId = "${spring.kafka.consumer.group-id}"
+    )
+    public void listen(UserInfoDTO event){
+        System.out.println("Received event: --> " + event.toString());
+        userService.saveUser(event);
     }
 
 }

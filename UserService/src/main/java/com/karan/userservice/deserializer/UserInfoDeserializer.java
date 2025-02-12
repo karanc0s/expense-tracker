@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.karan.userservice.Dto.UserInfoDTO;
 import org.apache.kafka.common.serialization.Deserializer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class UserInfoDeserializer implements Deserializer<UserInfoDTO> {
@@ -17,7 +18,7 @@ public class UserInfoDeserializer implements Deserializer<UserInfoDTO> {
                 throw new RuntimeException("data is null");
             }
             System.out.println("Deserializing..." + Arrays.toString(data));
-            result = mapper.readValue(new String(data, "UTF-8"), UserInfoDTO.class);
+            result = mapper.readValue(new String(data, StandardCharsets.UTF_8), UserInfoDTO.class);
         }catch (Exception e){
             throw new RuntimeException(e);
         }

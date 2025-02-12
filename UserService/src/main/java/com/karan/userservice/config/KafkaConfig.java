@@ -10,14 +10,14 @@ import java.util.Map;
 @Configuration
 public class KafkaConfig {
 
-    public Map<String , Object> getProp(){
-        Map<String , Object> prop = new HashMap<>();
-
-        prop.put(
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG ,
-                com.karan.userservice.deserializer.UserInfoDeserializer.class
-        );
-
-        return prop;
-    }
+//    public Map<String , Object> getProp(){
+//        Map<String , Object> prop = new HashMap<>();
+//
+//        prop.put(
+//                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG ,
+//                com.karan.userservice.deserializer.UserInfoDeserializer.class
+//        );
+//
+//        return prop;
+//    }
 }
