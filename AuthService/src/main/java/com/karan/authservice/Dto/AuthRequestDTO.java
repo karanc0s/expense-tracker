@@ -1,6 +1,11 @@
 package com.karan.authservice.Dto;
 
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class AuthRequestDTO {
 
     private String username;
@@ -16,22 +21,6 @@ public class AuthRequestDTO {
 
     public AuthRequestDTO(String username, String password) {
         this.username = username;
-        this.password = password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
         this.password = password;
     }
 

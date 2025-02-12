@@ -1,10 +1,16 @@
 package com.karan.authservice.entities;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@Setter
+@Getter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "user_info")
 public class UserInfo extends BaseEntity{
@@ -24,61 +30,4 @@ public class UserInfo extends BaseEntity{
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<UserRoles> roles = new HashSet<>();
-
-    public UserInfo(
-            String userId,
-            String username,
-            String password,
-            Set<UserRoles> roles
-    ) {
-        this.userId = userId;
-        this.username = username;
-        this.password = password;
-        this.roles = roles;
-    }
-
-    public UserInfo() {
-    }
-
-    @Override
-    public String toString() {
-        return "UserInfo{" +
-                "userId='" + userId + '\'' +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", roles=" + roles +
-                '}';
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Set<UserRoles> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<UserRoles> roles) {
-        this.roles = roles;
-    }
 }

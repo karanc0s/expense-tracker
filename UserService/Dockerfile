@@ -1,4 +1,5 @@
-FROM ubuntu:latest
-LABEL authors="karan"
+FROM openjdk:17-jdk-slim
+LABEL authors="karandeep-singh"
 
-ENTRYPOINT ["top", "-b"]
+ADD target/UserService.jar user-service.jar
+ENTRYPOINT ["java", "-jar" , "user-service.jar"]
