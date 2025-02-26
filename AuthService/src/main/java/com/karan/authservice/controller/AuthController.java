@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<JwtResponseDTO> signUp(@RequestBody UserInfoDTO userInfoDTO) {
+        System.out.println("Sign Up User: " + userInfoDTO);
         JwtResponseDTO responseDTO =  authService.signUp(userInfoDTO);
         return new ResponseEntity<>(
                 responseDTO,
@@ -39,16 +41,15 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponseDTO> logIn(@RequestBody AuthRequestDTO authRequestDTO) {
+        System.out.println("Login User: " + authRequestDTO);
         JwtResponseDTO responseDTO = authService.logIn(authRequestDTO);
         return ResponseEntity.ok(responseDTO);
     }
 
-//    public ResponseEntity<String> ping(){
-//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-//        if(auth != null && auth.isAuthenticated()){
-//            String userId = userDetailsService.loadUserByUsername(auth.getName());
-//        }
-//    }
+    @GetMapping("/validate")
+    public ResponseEntity<String> validate(){
+        String userId = authService.validateToken();
+    }
 
     @GetMapping("/health")
     public ResponseEntity<Boolean> checkHealth(){

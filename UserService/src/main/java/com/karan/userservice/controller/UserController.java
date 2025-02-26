@@ -32,6 +32,11 @@ public class UserController {
 
     }
 
+    @GetMapping("/hello")
+    public String sayHello(){
+        return "Hello World";
+    }
+
     @GetMapping("/health")
     public ResponseEntity<Boolean> checkHealth(){
         return new ResponseEntity<>(true, HttpStatus.OK);

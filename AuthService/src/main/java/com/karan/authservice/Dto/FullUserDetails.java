@@ -2,6 +2,7 @@ package com.karan.authservice.Dto;
 
 import com.karan.authservice.entities.UserInfo;
 import com.karan.authservice.entities.UserRoles;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,7 +11,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class FullUserDetails extends UserInfo implements UserDetails {
+public class FullUserDetails implements UserDetails {
+
+    @Getter
+    private final String userId;
 
     private final String username;
     private final String password;
@@ -18,6 +22,7 @@ public class FullUserDetails extends UserInfo implements UserDetails {
     Collection<? extends GrantedAuthority> authorities;
 
     public FullUserDetails(UserInfo info) {
+        this.userId = info.getUserId();
         this.username = info.getUsername();
         this.password = info.getPassword();
         List<GrantedAuthority> authorities = new ArrayList<>();
@@ -44,4 +49,5 @@ public class FullUserDetails extends UserInfo implements UserDetails {
     public String getUsername() {
         return username;
     }
+
 }

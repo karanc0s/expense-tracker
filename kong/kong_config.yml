@@ -1,0 +1,28 @@
+_format_version: "1.1"
+
+services:
+  - name: auth-ser
+    url: http://auth-service:7001
+    routes:
+      - name: signup
+        paths:
+          - /auth/v1
+        strip_path: false
+#      - name: health
+#        paths:
+#          - /auth/v1/health
+#        strip_path: false
+
+  - name: user-ser
+    url: http://user-service:7002
+    routes:
+      - name: hello
+        paths:
+          - /user/v1/hello
+        strip_path: false
+
+    plugins:
+      - name: custom-auth
+        config:
+          auth_service_url: http://host.docker.internal:7001/auth/v1/ping
+

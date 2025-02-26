@@ -1,8 +1,13 @@
 version: "1"
 
+networks:
+  my-net:
+    driver: bridge
+
 volumes:
   mysql-db:
     driver: local
+  kong-data: {}
 
 services:
   zookeeper:
@@ -18,6 +23,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - my-net
 
   kafka:
     container_name: con-kafka
@@ -27,10 +34,13 @@ services:
         condition: service_healthy
     ports:
       - 9092:9092
+    networks:
+      - my-net
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.211.55.3:9092
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.211.55.3:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENERS: PLAINTEXT://:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -41,12 +51,94 @@ services:
     container_name: mysql-8.3.0
     restart: always
     environment:
+      MYSQL_USER: user11
+      MYSQL_PASSWORD: user@1234
+      MYSQL_DATABASE: authservice_db
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    volumes:
-      - mysql-db:/var/lib/mysql
+#    volumes:
+#      - mysql-db:/var/lib/mysql
     ports:
       - '3306:3306'
     expose:
       - '3306'
+    networks:
+      - my-net
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  auth-service:
+    build:
+      context: AuthService
+      dockerfile: Dockerfile
+    container_name: con-auth-ser
+    depends_on:
+      - kafka
+      - mysql
+    ports:
+      - "7001:7001"
+    networks:
+      - my-net
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/authservice_db?useSSL=false&useUnicode=yes&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user11
+      SPRING_DATASOURCE_PASSWORD: user@1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+  user-service:
+    build:
+      context: UserService
+      dockerfile: Dockerfile
+    container_name: con-user-ser
+    depends_on:
+      - kafka
+      - mysql
+    ports:
+      - "7002:7002"
+    networks:
+      - my-net
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/authservice_db?useSSL=false&useUnicode=yes&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user11
+      SPRING_DATASOURCE_PASSWORD: user@1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+
+
+  kong:
+    image: kong:latest
+    container_name: kong-gateway
+
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
+      KONG_PLUGINS: kong_auth
+      KONG_LUA_PACKAGE_PATH: /usr/local/share/lua/5.1/?.lua;;
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      KONG_LOG_LEVEL: "debug"
+
+    volumes:
+      - ./kong/kong_config.yml:/usr/local/kong/declarative/kong.yml
+      - ./kong/lua_plugins:/usr/local/share/lua/5.1/kong/plugins
+
+    networks:
+      - my-net
+    ports:
+      - "8000:8000" # Kong Proxy (Public API Gateway)
+      - "8443:8443" # Kong Proxy (SSL)
+      - "8001:8001" # Kong Admin API
+      - "8002:8002" # GUI For Http
+      - "8445:8445" # GUI For Https
+      - "8444:8444" # Kong Admin API (SSL)
 
