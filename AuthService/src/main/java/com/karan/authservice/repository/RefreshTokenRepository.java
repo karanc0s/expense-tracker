@@ -1,14 +1,17 @@
 package com.karan.authservice.repository;
 
-import com.karan.authservice.entities.RefreshToken;
+import java.util.Optional;
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.karan.authservice.entities.RefreshToken;
 
 @Repository
 public interface RefreshTokenRepository extends CrudRepository<RefreshToken , Integer> {
 
-    Optional<RefreshToken> findByToken(String token);
+    Optional<RefreshToken> findByuserID(String userId);
+
+    Optional<RefreshToken> findByRefreshToken(String refreshToken);
 
 }

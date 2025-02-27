@@ -1,150 +1,118 @@
 package com.karan.authservice.service;
 
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
 import com.karan.authservice.Dto.AuthRequestDTO;
 import com.karan.authservice.Dto.JwtResponseDTO;
 import com.karan.authservice.Dto.UserInfoDTO;
 import com.karan.authservice.entities.RefreshToken;
-import com.karan.authservice.entities.UserInfo;
-import com.karan.authservice.exception.UserAlreadyExistsException;
-import com.karan.authservice.exception.UserNotFoundException;
-import com.karan.authservice.repository.RefreshTokenRepository;
-import com.karan.authservice.repository.UserRepository;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
+import com.karan.authservice.entities.UserCreds;
+import com.karan.authservice.exception.AccessTokenExpiredException;
+import com.karan.authservice.exception.AlreadyExistsException;
+import com.karan.authservice.exception.BadCredentialsException;
+import com.karan.authservice.exception.InvalidTokenException;
+import com.karan.authservice.exception.ResourceNotFound;
+import com.karan.authservice.repository.UserCredRepository;
 
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final RefreshTokenService tokenService;
-    private final PasswordEncoder passwordEncoder;
-    private final Producer<String, UserInfoDTO> producer;
-    private final AuthenticationManager authenticationManager;
+    
+    private final UserCredRepository userCredRepository;
+    private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
 
-
-    @Autowired
     public AuthService(
-            UserRepository userRepository,
-            RefreshTokenService tokenService,
-            PasswordEncoder passwordEncoder,
-            Producer<String, UserInfoDTO> producer,
-            AuthenticationManager authenticationManager,
-            JwtService jwtService
-    ) {
-        this.userRepository = userRepository;
-        this.tokenService = tokenService;
-        this.passwordEncoder = passwordEncoder;
-        this.producer = producer;
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
+        UserCredRepository userCredRepository,
+        RefreshTokenService refreshTokenService,
+        JwtService jwtService
+    ){
+        this.userCredRepository = userCredRepository;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtService = jwtService;    
+        
     }
 
+    public JwtResponseDTO login(AuthRequestDTO authRequestDTO) {
+        String username = authRequestDTO.getUsername();
+        String password = authRequestDTO.getPassword();
 
-    public JwtResponseDTO logIn(AuthRequestDTO requestDTO){
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        requestDTO.getUsername(),
-                        requestDTO.getPassword()
-                )
+        UserCreds creds = userCredRepository.findByUsername(username).orElseThrow(
+                () -> new ResourceNotFound("user not found")
         );
-        if(!authentication.isAuthenticated()){
-            throw new UserNotFoundException("Invalid username or password");
+        if (!password.equals(creds.getPassword())) {
+            throw new BadCredentialsException("invalid password");
         }
 
-        String refreshToken = jwtService.generateRefreshToken(requestDTO.getUsername());
-        String accessToken = jwtService.generateAccessToken(requestDTO.getUsername());
-        Optional<UserInfo> optionalUserInfo = userRepository.findByUsername(requestDTO.getUsername());
+        String accessToken = jwtService.generateAccessToken(creds.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(creds);
 
-        if(optionalUserInfo.isEmpty()){
-            throw new UserNotFoundException("Unexpected Error");
-        }
-        tokenService.saveToken(optionalUserInfo.get() , refreshToken);
-        return new JwtResponseDTO.Builder()
+        return JwtResponseDTO.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(refreshToken.getRefreshToken())
                 .build();
     }
 
-    public JwtResponseDTO signUp(UserInfoDTO infoDTO){
-        infoDTO.setPassword(passwordEncoder.encode(infoDTO.getPassword()));
-        if(fetchUser(infoDTO.getUsername()).isPresent()){
-            throw new UserAlreadyExistsException("User Already Exist");
+    public JwtResponseDTO register(AuthRequestDTO authRequestDTO) {
+        String username = authRequestDTO.getUsername();
+        String password = authRequestDTO.getPassword();
+
+        Optional<UserCreds> optionalUserCreds = userCredRepository.findByUsername(username);
+        if(optionalUserCreds.isPresent()){
+            throw new AlreadyExistsException("username already exists");
         }
-        String userId = UUID.randomUUID().toString();
-        UserInfo info = new UserInfo(
-                userId,
-                infoDTO.getUsername(),
-                infoDTO.getPassword(),
-                new HashSet<>()
-        );
-        info = userRepository.save(info);
-        String refToken = jwtService.generateRefreshToken(info.getUsername());
-        RefreshToken refreshToken = tokenService.saveToken(info , refToken);
-        String accessToken = jwtService.generateAccessToken(info.getUsername());
 
+        UserCreds creds = new UserCreds();
+        creds.setUsername(username);
+        creds.setPassword(password);
+        creds.setUserId(UUID.randomUUID().toString());
 
-        UserInfoDTO eventDTO = UserInfoDTO.builder()
-                .userId(info.getUserId())
-                .username(info.getUsername())
-                .firstname(infoDTO.getFirstname())
-                .lastname(infoDTO.getLastname())
-                .phoneNumber(infoDTO.getPhoneNumber())
-                .email(infoDTO.getEmail())
-                .build();
+        creds = userCredRepository.save(creds);
 
-//        sendEvent(eventDTO);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(creds);
+        String accessToken = jwtService.generateAccessToken(creds.getUsername());
 
-
-        return new JwtResponseDTO.Builder()
+        return JwtResponseDTO.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
+                .refreshToken(refreshToken.getRefreshToken())
                 .build();
     }
 
-    private Optional<UserInfo> fetchUser(String username) {
-        return userRepository.findByUsername(username);
+
+    public String validateToken(String token) {
+        if(jwtService.isTokenExpired(token)){
+            System.out.println("adfadfadfasdfasdf");
+            throw new AccessTokenExpiredException("Token is expired");
+        }
+        String tokenType = jwtService.extractTokenType(token);
+        System.out.println("TOKEN TYPE: " + tokenType);
+        if(!tokenType.equals("ACCESS_TOKEN")){
+            throw new InvalidTokenException("Invalid token");
+        }
+
+        String username = jwtService.extractUserName(token);
+        Optional<UserCreds> optionalUserCreds = userCredRepository.findByUsername(username);
+        if(optionalUserCreds.isEmpty()){
+            throw new ResourceNotFound("Not Found.... ISSUE!!!!");
+        }
+        return optionalUserCreds.get().getUserId();
     }
 
-    public String validate() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if(auth != null && auth.isAuthenticated()){
-            Optional<UserInfo> optionalUserInfo = fetchUser(auth.getName());
-            if(optionalUserInfo.isEmpty()){
-                throw new UserNotFoundException("Unexpected Error");
-            }
-            return optionalUserInfo.get().getUserId();
-        }else{
-            throw new BadCredentialsException("Bad credentials");
-        }
-    }
     // sending event
     private void sendEvent(UserInfoDTO userInfoDTO){
 
 
-        ProducerRecord<String , UserInfoDTO> record = new ProducerRecord<>("T11TEST","USER_EVENT_CREATED" ,userInfoDTO);
-        producer.send(record , (metadata , exception)->{
-            if (exception != null) {
-                System.err.println("Error sending message to Kafka: " + exception.getMessage());
-            } else {
-                System.out.println("Message sent to Kafka, offset: " + metadata.offset());
-            }
-        });
+        // ProducerRecord<String , UserInfoDTO> record = new ProducerRecord<>("T11TEST","USER_EVENT_CREATED" ,userInfoDTO);
+        // producer.send(record , (metadata , exception)->{
+        //     if (exception != null) {
+        //         System.err.println("Error sending message to Kafka: " + exception.getMessage());
+        //     } else {
+        //         System.out.println("Message sent to Kafka, offset: " + metadata.offset());
+        //     }
+        // });
     }
 
 }

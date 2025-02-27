@@ -1,72 +1,66 @@
 package com.karan.authservice.service;
 
-import com.karan.authservice.Dto.JwtResponseDTO;
-import com.karan.authservice.entities.RefreshToken;
-import com.karan.authservice.entities.UserInfo;
-import com.karan.authservice.exception.ExpiredTokenException;
-import com.karan.authservice.repository.RefreshTokenRepository;
-import com.karan.authservice.repository.UserRepository;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
+import com.karan.authservice.Dto.JwtResponseDTO;
+import com.karan.authservice.Dto.RefreshTokenRequestDTO;
+import com.karan.authservice.entities.RefreshToken;
+import com.karan.authservice.entities.UserCreds;
+import com.karan.authservice.exception.ResourceNotFound;
+import com.karan.authservice.repository.RefreshTokenRepository;
+import com.karan.authservice.repository.UserCredRepository;
 
 @Service
 public class RefreshTokenService {
 
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtService jwtService;
-    private final UserRepository userRepository;
+    private RefreshTokenRepository refreshTokenRepository;
+    private UserCredRepository userCredRepository;
+    private JwtService jwtService;
 
-    public RefreshTokenService(
-            RefreshTokenRepository refreshTokenRepository, JwtService jwtService,
-            UserRepository userRepository
-    ) {
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.jwtService = jwtService;
-        this.userRepository = userRepository;
-    }
+    public JwtResponseDTO refreshAccessToken(RefreshTokenRequestDTO refreshDTO){
 
-    public RefreshToken verifyExpiryDate(RefreshToken refreshToken) {
-        // if token is expired then, this will give -ve value
-        if(refreshToken.getExpiryDate().compareTo(Instant.now()) < 0){
-            refreshTokenRepository.delete(refreshToken);
-            throw new ExpiredTokenException("Expired refresh token. Please Login Again");
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByRefreshToken(refreshDTO.getRefreshToken());
+        if(optionalRefreshToken.isEmpty()){
+            throw new ResourceNotFound("Refresh token not found");
         }
-        return refreshToken;
-    }
-
-    public Optional<RefreshToken> findByToken(String token) {
-        return refreshTokenRepository.findByToken(token);
-    }
-
-    public RefreshToken saveToken(UserInfo userInfo, String refreshToken) {
-        if(userInfo == null || refreshToken == null) {
-            throw new RuntimeException("User or refresh token is null");
+        RefreshToken refreshToken = optionalRefreshToken.get();
+        if(refreshToken.getIsRevoked()){
+            throw new RuntimeException("Refresh token is revoked");
         }
-        RefreshToken token = RefreshToken.builder()
-                .userInfo(userInfo)
-                .token(refreshToken)
-                .expiryDate(Instant.now().plusMillis(600000))
+
+        UserCreds creds = userCredRepository.findByUserId(refreshToken.getUserID()).orElseThrow(
+                () -> new RuntimeException("User credentials not found")
+        );
+        String newRefresh = jwtService.generateRefreshToken(creds.getUsername());
+
+        refreshToken.setRefreshToken(newRefresh);
+        refreshToken.setIsRevoked(false);
+
+        refreshToken = refreshTokenRepository.save(refreshToken);
+
+        String accessToken = jwtService.generateAccessToken(creds.getUsername());
+
+        return JwtResponseDTO.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken.getRefreshToken())
                 .build();
-
-        return refreshTokenRepository.save(token);
     }
 
-    public JwtResponseDTO refreshToken(String refreshToken) {
-        return refreshTokenRepository.findByToken(refreshToken)
-                .map(RefreshToken::getUserInfo)
-                .map(userInfo -> {
-                    String accessToken = jwtService.generateAccessToken(userInfo.getUsername());
-                    saveToken(userInfo, accessToken);
-                    return JwtResponseDTO.builder()
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build();
-                }).orElseThrow(
-                        () -> new RuntimeException("Refresh token not found")
-                );
+    public RefreshToken createRefreshToken(UserCreds userCreds){
+        String token = jwtService.generateRefreshToken(userCreds.getUsername());
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByuserID(userCreds.getUserId());
+        RefreshToken refreshToken = new RefreshToken();
 
+        if(optionalRefreshToken.isPresent()){
+            refreshToken = optionalRefreshToken.get();
+        }
+
+        refreshToken.setRefreshToken(token);
+        refreshToken.setIsRevoked(false);
+        refreshToken.setUserID(userCreds.getUserId());
+
+        return refreshTokenRepository.save(refreshToken);
     }
 }

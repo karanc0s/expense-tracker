@@ -3,16 +3,17 @@ spring:
     name: AuthService
 
   kafka:
-    bootstrap-servers: 10.211.55.3:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    consumer:
-      group-id: event-user-creation
+    bootstrap-servers: http://localhost:9092/
+  #   producer:
+  #     key-serializer: org.apache.kafka.common.serialization.StringSerializer
+  #     value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  #   consumer:
+  #     group-id: event-user-creation
 
 
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:10.211.55.03}:${MYSQL_PORT:3306}/${MYSQL_DB:authservice_db}?useSSL=false&useUnicode=yes&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    # url: jdbc:mysql://${MYSQL_HOST:10.211.55.03}:${MYSQL_PORT:3306}/${MYSQL_DB:authservice_db}?useSSL=false&useUnicode=yes&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/authservice_db?allowPublicKeyRetrieval=true&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: "user11"
     password: "user@1234"
@@ -32,11 +33,11 @@ management:
         include: beans
 
 
-app:
-  jwt:
-    secret: "Sdsdf"
-    access-token-expiration: 300000  # 5 minutes
-    refresh-token-expiration: 2592000000  # 30 days
+# app:
+#   jwt:
+#     secret: "Sdsdf"
+#     access-token-expiration: 300000  # 5 minutes
+#     refresh-token-expiration: 2592000000  # 30 days
 
 server:
   port: 7001
