@@ -17,7 +17,10 @@ import com.karan.authservice.exception.InvalidTokenException;
 import com.karan.authservice.exception.ResourceNotFound;
 import com.karan.authservice.repository.UserCredRepository;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class AuthService {
 
     
@@ -25,16 +28,6 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
 
-    public AuthService(
-        UserCredRepository userCredRepository,
-        RefreshTokenService refreshTokenService,
-        JwtService jwtService
-    ){
-        this.userCredRepository = userCredRepository;
-        this.refreshTokenService = refreshTokenService;
-        this.jwtService = jwtService;    
-        
-    }
 
     public JwtResponseDTO login(AuthRequestDTO authRequestDTO) {
         String username = authRequestDTO.getUsername();

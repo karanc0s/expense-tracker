@@ -12,12 +12,15 @@ import com.karan.authservice.exception.ResourceNotFound;
 import com.karan.authservice.repository.RefreshTokenRepository;
 import com.karan.authservice.repository.UserCredRepository;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class RefreshTokenService {
 
-    private RefreshTokenRepository refreshTokenRepository;
-    private UserCredRepository userCredRepository;
-    private JwtService jwtService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final UserCredRepository userCredRepository;
+    private final JwtService jwtService;
 
     public JwtResponseDTO refreshAccessToken(RefreshTokenRequestDTO refreshDTO){
 
