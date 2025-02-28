@@ -27,11 +27,14 @@ public class AuthService {
     private final UserCredRepository userCredRepository;
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
+    private final ProducerService producerService;
 
 
     public JwtResponseDTO login(AuthRequestDTO authRequestDTO) {
         String username = authRequestDTO.getUsername();
         String password = authRequestDTO.getPassword();
+    
+        
 
         UserCreds creds = userCredRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFound("user not found")
@@ -49,9 +52,9 @@ public class AuthService {
                 .build();
     }
 
-    public JwtResponseDTO register(AuthRequestDTO authRequestDTO) {
-        String username = authRequestDTO.getUsername();
-        String password = authRequestDTO.getPassword();
+    public JwtResponseDTO register(UserInfoDTO userInfoDTO) {
+        String username = userInfoDTO.getUsername();
+        String password = userInfoDTO.getPassword();
 
         Optional<UserCreds> optionalUserCreds = userCredRepository.findByUsername(username);
         if(optionalUserCreds.isPresent()){
@@ -65,6 +68,17 @@ public class AuthService {
 
         creds = userCredRepository.save(creds);
 
+        UserInfoDTO eventDTO = UserInfoDTO.builder()
+                .userId(creds.getUserId())
+                .username(creds.getUsername())
+                .email(userInfoDTO.getEmail())
+                .firstname(userInfoDTO.getFirstname())
+                .lastname(userInfoDTO.getLastname())
+                .phoneNumber(userInfoDTO.getPhoneNumber())
+                .build();
+
+        producerService.sendUserEvent(eventDTO);
+
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(creds);
         String accessToken = jwtService.generateAccessToken(creds.getUsername());
 
@@ -77,7 +91,6 @@ public class AuthService {
 
     public String validateToken(String token) {
         if(jwtService.isTokenExpired(token)){
-            System.out.println("adfadfadfasdfasdf");
             throw new AccessTokenExpiredException("Token is expired");
         }
         String tokenType = jwtService.extractTokenType(token);
@@ -94,18 +107,6 @@ public class AuthService {
         return optionalUserCreds.get().getUserId();
     }
 
-    // sending event
-    private void sendEvent(UserInfoDTO userInfoDTO){
-
-
-        // ProducerRecord<String , UserInfoDTO> record = new ProducerRecord<>("T11TEST","USER_EVENT_CREATED" ,userInfoDTO);
-        // producer.send(record , (metadata , exception)->{
-        //     if (exception != null) {
-        //         System.err.println("Error sending message to Kafka: " + exception.getMessage());
-        //     } else {
-        //         System.out.println("Message sent to Kafka, offset: " + metadata.offset());
-        //     }
-        // });
-    }
+    
 
 }

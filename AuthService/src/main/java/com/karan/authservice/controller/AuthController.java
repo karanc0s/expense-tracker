@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.karan.authservice.Dto.AuthRequestDTO;
 import com.karan.authservice.Dto.JwtResponseDTO;
+import com.karan.authservice.Dto.UserInfoDTO;
 import com.karan.authservice.service.AuthService;
 
 import lombok.AllArgsConstructor;
@@ -31,7 +32,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<JwtResponseDTO> register (
-            @RequestBody AuthRequestDTO authRequestDTO
+            @RequestBody UserInfoDTO authRequestDTO
     ) {
         JwtResponseDTO responseDTO = authService.register(authRequestDTO);
         return ResponseEntity.ok(responseDTO);

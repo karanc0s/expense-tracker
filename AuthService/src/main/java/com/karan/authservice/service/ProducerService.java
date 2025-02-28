@@ -1,6 +1,5 @@
 package com.karan.authservice.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
@@ -14,8 +13,8 @@ import lombok.AllArgsConstructor;
 public class ProducerService {
 
 
-    @Value(value = "${spring.kafka.topic.user-creation}")
-    private final String topicName;
+    // @Value(value = "${spring.kafka.topic.user-creation}")
+    private final String topicName = "user-creation";
 
     private final KafkaTemplate<String, UserInfoDTO> producer;
     

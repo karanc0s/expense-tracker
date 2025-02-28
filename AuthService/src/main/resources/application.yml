@@ -3,13 +3,13 @@ spring:
     name: AuthService
 
   kafka:
-    bootstrap-servers: http://localhost:9092/
-  #   producer:
-  #     key-serializer: org.apache.kafka.common.serialization.StringSerializer
-  #     value-serializer: org.apache.kafka.common.serialization.StringSerializer
-  #   consumer:
-  #     group-id: event-user-creation
-
+    bootstrap-servers: localhost:9092
+    topic: 
+      user-creation: user-creation
+      
+    producer:
+      group-id: event-user-creation
+   
 
   datasource:
     # url: jdbc:mysql://${MYSQL_HOST:10.211.55.03}:${MYSQL_PORT:3306}/${MYSQL_DB:authservice_db}?useSSL=false&useUnicode=yes&characterEncoding=UTF-8&allowPublicKeyRetrieval=true

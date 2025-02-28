@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,12 +51,13 @@ public class UserController {
 
 
     @KafkaListener(
-            topics = "${spring.kafka.topic-json.name}" ,
-            groupId = "${spring.kafka.consumer.group-id}"
+            topics = "${spring.kafka.topic.user-creation}",
+            containerFactory="ListenerContainerFactory"
     )
-    public void listen(UserInfoDTO event){
+    public void listen(@Payload UserInfoDTO event, Acknowledgment acknowledgment) {
         System.out.println("Received event: --> " + event.toString());
-        userService.saveUser(event);
+        acknowledgment.acknowledge();
+        // userService.saveUser(event);
     }
 
 }

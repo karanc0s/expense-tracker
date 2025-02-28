@@ -1,7 +1,7 @@
 package com.karan.authservice.Dto;
 
-import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,7 +30,5 @@ public class UserInfoDTO {
 
     private String email;
 
-    private Set<String> roles;
 
-    
 }

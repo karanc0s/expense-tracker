@@ -3,16 +3,17 @@ spring:
     name: UserService
 
   kafka:
-    bootstrap-servers: 10.211.55.3:9092
-    topic-json:
-      name: "T11TEST"
+    bootstrap-servers: localhost:9092
+    
+    topic: 
+      user-creation: user-creation
+
     consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: com.karan.userservice.deserializer.UserInfoDeserializer
       group-id: event-user-creation
 
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:10.211.55.03}:${MYSQL_PORT:3306}/${MYSQL_DB:authservice_db}?useSSL=false&useUnicode=yes&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    # url: jdbc:mysql://${MYSQL_HOST:10.211.55.03}:${MYSQL_PORT:3306}/${MYSQL_DB:authservice_db}?useSSL=false&useUnicode=yes&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/authservice_db?allowPublicKeyRetrieval=true&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: "user11"
     password: "user@1234"

@@ -1,8 +1,5 @@
 package com.karan.userservice.service;
 
-import java.lang.module.ResolutionException;
-import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 
 import com.karan.userservice.Dto.UserInfoDTO;
@@ -36,21 +33,22 @@ public class UserService {
     }
 
     public UserInfoDTO getUser(UserInfoDTO userInfoDTO){
-        Optional<UserInfo> userInfoOptional = userRepository.findById(userInfoDTO.getUserId());
-        if(userInfoOptional.isEmpty()){
-            throw new ResolutionException("User not found");
-        }
-        UserInfo userInfo = userInfoOptional.get();
+        return null;
+        // Optional<UserInfo> userInfoOptional = userRepository.findById(userInfoDTO.getUserId());
+        // if(userInfoOptional.isEmpty()){
+        //     throw new ResolutionException("User not found");
+        // }
+        // UserInfo userInfo = userInfoOptional.get();
 
-        return  UserInfoDTO.builder()
-                .userId(userInfoDTO.getUserId())
-                .email(userInfoDTO.getEmail())
-                .firstname(userInfoDTO.getFirstname())
-                .lastname(userInfoDTO.getLastname())
-                .username(userInfoDTO.getUsername())
-                .phoneNumber(userInfoDTO.getPhoneNumber())
-                .email(userInfo.getEmail())
-                .build();
+        // return  UserInfoDTO.builder()
+        //         .userId(userInfoDTO.getUserId())
+        //         .email(userInfoDTO.getEmail())
+        //         .firstname(userInfoDTO.getFirstname())
+        //         .lastname(userInfoDTO.getLastname())
+        //         .username(userInfoDTO.getUsername())
+        //         .phoneNumber(userInfoDTO.getPhoneNumber())
+        //         .email(userInfo.getEmail())
+        //         .build();
     }
 
 }
