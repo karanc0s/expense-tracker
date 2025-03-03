@@ -15,13 +15,11 @@ public class ProducerService {
 
     // @Value(value = "${spring.kafka.topic.user-creation}")
     private final String topicName = "user-creation";
-
     private final KafkaTemplate<String, UserInfoDTO> producer;
     
     
 
     public void sendUserEvent(UserInfoDTO userInfoDTO){
-    
         try{
             SendResult<String, UserInfoDTO> result = producer.send(
                 topicName,
@@ -46,4 +44,7 @@ public class ProducerService {
         //     }
         // });
     }
+
+
+
 }

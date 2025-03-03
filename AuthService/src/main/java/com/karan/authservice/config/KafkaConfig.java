@@ -27,6 +27,7 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, UserInfoDTOSerializer.class);
+        System.out.println("ProducerFactory");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -35,6 +36,7 @@ public class KafkaConfig {
     public KafkaTemplate<String, UserInfoDTO> kafkaTemplate(
             ProducerFactory<String, UserInfoDTO> producerFactory
     ) {
+        System.out.println("KafkaTemplate");
         return new KafkaTemplate<>(producerFactory);
     }
 
